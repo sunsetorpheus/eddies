@@ -1,25 +1,12 @@
-import { useEffect, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from './supabase'
-import { SignIn } from './pages/SignIn'
-import { Home } from './pages/Home'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { useSession } from './useSession'
+import { AuthForm } from './pages/AuthForm'
+import { Dashboard } from './pages/Dashboard'
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const session = useSession()
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setLoading(false)
-    })
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
-    return () => sub.subscription.unsubscribe()
-  }, [])
-
-  if (loading) {
+  if (session === undefined) {
     return (
       <div className="flex min-h-svh items-center justify-center text-sm text-muted-foreground">
         Loading…
@@ -27,5 +14,22 @@ export default function App() {
     )
   }
 
-  return session ? <Home email={session.user.email ?? ''} /> : <SignIn />
+  return (
+    <BrowserRouter>
+      <Routes>
+        {session ? (
+          <>
+            <Route path="/" element={<Dashboard email={session.user.email ?? ''} />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        ) : (
+          <>
+            <Route path="/sign-in" element={<AuthForm mode="sign-in" />} />
+            <Route path="/sign-up" element={<AuthForm mode="sign-up" />} />
+            <Route path="*" element={<Navigate to="/sign-in" replace />} />
+          </>
+        )}
+      </Routes>
+    </BrowserRouter>
+  )
 }

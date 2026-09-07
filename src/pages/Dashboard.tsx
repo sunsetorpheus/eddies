@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/supabase'
 import { Button } from '@/components/ui/button'
 
-export function Home({ email }: { email: string }) {
+export function Dashboard({ email }: { email: string }) {
   const [busy, setBusy] = useState(false)
 
   async function signOut() {
@@ -13,7 +13,7 @@ export function Home({ email }: { email: string }) {
       setBusy(false)
       toast.error(error.message)
     }
-    // on success, onAuthStateChange swaps the page — no need to reset state
+    // on success, the session clears and the router redirects to /sign-in
   }
 
   return (
