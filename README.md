@@ -1,32 +1,17 @@
-# React + TypeScript + Vite
+# Eddies
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Personal finance web app. Vite + React + Supabase. PWA — install to phone home screen.
 
-Currently, two official plugins are available:
+Phase 1 (now): auth only. Phase 2 (later): transactions.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Local dev
 
-## React Compiler
+1. Copy `.env.example` to `.env`, fill in your Supabase URL + anon key.
+2. `npm install`
+3. `npm run dev`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Deploy
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Static site. Connect this repo to Cloudflare Pages / Vercel / Netlify.
+Build command `npm run build`, output dir `dist`.
+Set env vars `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the host dashboard.
