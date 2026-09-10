@@ -13,8 +13,21 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const USERNAME_PATTERN = '^[a-zA-Z0-9_]{3,20}$'
+
+/** Turn "email or username" into an email: pass emails through, look usernames up. */
+async function resolveEmail(identifier: string): Promise<string | null> {
+  if (identifier.includes('@')) return identifier
+  const { data, error } = await supabase.rpc('email_for_username', {
+    lookup_username: identifier,
+  })
+  if (error) throw error
+  return data
+}
+
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('') // email on sign-up, email-or-username on sign-in
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -23,19 +36,36 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
-    const { error } = isSignUp
-      ? await supabase.auth.signUp({ email, password })
-      : await supabase.auth.signInWithPassword({ email, password })
-    setBusy(false)
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email: identifier,
+          password,
+          options: { data: { username } },
+        })
+        if (error) throw error
+        toast.success('Account created. Check your email to confirm, then sign in.')
+        return
+      }
 
-    if (error) {
-      toast.error(error.message)
-      return
+      const email = await resolveEmail(identifier.trim())
+      if (!email) {
+        toast.error('No account with that username.')
+        return
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      // on success the session updates and the router redirects to the dashboard
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Something went wrong.'
+      toast.error(
+        message.includes('duplicate key') || message.includes('profiles_username')
+          ? 'That username is taken.'
+          : message,
+      )
+    } finally {
+      setBusy(false)
     }
-    if (isSignUp) {
-      toast.success('Account created. Check your email to confirm, then sign in.')
-    }
-    // on success the session updates and the router redirects to the dashboard
   }
 
   return (
@@ -47,21 +77,36 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           </CardTitle>
           <CardDescription>
             {isSignUp
-              ? 'Enter an email and password to get started.'
-              : 'Enter your email and password to continue.'}
+              ? 'Pick a username, then enter an email and password.'
+              : 'Enter your email or username and password to continue.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="grid gap-4">
+            {isSignUp && (
+              <div className="grid gap-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  required
+                  pattern={USERNAME_PATTERN}
+                  title="3–20 characters: letters, numbers, or underscores"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </div>
+            )}
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="identifier">{isSignUp ? 'Email' : 'Email or username'}</Label>
               <Input
-                id="email"
-                type="email"
-                autoComplete="email"
+                id="identifier"
+                type={isSignUp ? 'email' : 'text'}
+                autoComplete={isSignUp ? 'email' : 'username'}
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
               />
             </div>
             <div className="grid gap-2">

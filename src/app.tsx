@@ -19,7 +19,10 @@ export default function App() {
       <Routes>
         {session ? (
           <>
-            <Route path="/" element={<Dashboard email={session.user.email ?? ''} />} />
+            <Route
+              path="/"
+              element={<Dashboard userId={session.user.id} email={session.user.email ?? ''} />}
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (
