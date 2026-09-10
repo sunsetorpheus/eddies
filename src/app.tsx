@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { useSession } from './useSession'
-import { AuthForm } from './pages/AuthForm'
-import { Dashboard } from './pages/Dashboard'
+import { useSession } from './features/auth/use-session'
+import { AuthForm } from './features/auth/auth-form'
+import { Dashboard } from './features/dashboard/dashboard'
 
 export default function App() {
   const session = useSession()

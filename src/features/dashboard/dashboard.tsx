@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { supabase } from '@/supabase'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 
 export function Dashboard({ email }: { email: string }) {
