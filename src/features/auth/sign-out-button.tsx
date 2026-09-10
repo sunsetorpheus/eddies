@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { LogOut } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 
@@ -24,7 +25,7 @@ export function SignOutButton({ className }: { className?: string }) {
       onClick={signOut}
       disabled={busy}
       aria-label="Sign out"
-      className={className}
+      className={cn('text-overdue hover:text-overdue', className)}
     >
       <LogOut />
     </Button>

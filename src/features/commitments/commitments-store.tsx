@@ -27,6 +27,7 @@ type Store = {
   markPaid: (commitmentId: string, month: string) => Promise<void>
   unmarkPaid: (commitmentId: string, month: string) => Promise<void>
   setIncome: (income: number | null) => Promise<void>
+  setUsername: (username: string) => Promise<void>
 }
 
 const Ctx = createContext<Store | null>(null)
@@ -123,6 +124,11 @@ export function CommitmentsProvider({ userId, children }: { userId: string; chil
         .from('profiles')
         .update({ monthly_income: income })
         .eq('id', userId)
+      if (error) throw error
+      await reload()
+    },
+    async setUsername(username) {
+      const { error } = await supabase.from('profiles').update({ username }).eq('id', userId)
       if (error) throw error
       await reload()
     },

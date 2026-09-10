@@ -37,6 +37,11 @@ context: `CommitmentsProvider` in `features/commitments/commitments-store.tsx`,
 consumed via `useCommitments()`. One fetch, one `reload()`, writes update it
 optimistically then re-fetch. `app.tsx` wraps the authed routes in it.
 
+Profile page edits: username + income go through the store (`setUsername`,
+`setIncome`). Password change stays local to the component — it verifies the
+current password with a throwaway `signInWithPassword`, then
+`supabase.auth.updateUser({ password })`.
+
 ## Naming
 
 - Files: kebab-case (`auth-form.tsx`, `use-session.ts`). Matches `components/ui/`.
