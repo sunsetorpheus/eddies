@@ -1,0 +1,24 @@
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+
+export function SignOutButton({ className }: { className?: string }) {
+  const [busy, setBusy] = useState(false)
+
+  async function signOut() {
+    setBusy(true)
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      setBusy(false)
+      toast.error(error.message)
+    }
+    // on success the session clears and the router redirects to /sign-in
+  }
+
+  return (
+    <Button variant="outline" size="sm" onClick={signOut} disabled={busy} className={className}>
+      Sign out
+    </Button>
+  )
+}

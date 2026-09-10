@@ -1,0 +1,10 @@
+import { LayoutDashboard, List, Settings, type LucideIcon } from 'lucide-react'
+
+export type NavItem = { to: string; label: string; icon: LucideIcon }
+
+/** The app's primary destinations. Feeds both the desktop sidebar and the phone bottom bar. */
+export const NAV_ITEMS: NavItem[] = [
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/commitments', label: 'Commitments', icon: List },
+  { to: '/settings', label: 'Settings', icon: Settings },
+]
