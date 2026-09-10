@@ -4,6 +4,7 @@ import { useCommitments } from '@/features/commitments/commitments-store'
 import { CommitmentsSummary } from '@/features/commitments/summary'
 import { MonthSwitcher } from '@/features/commitments/month-switcher'
 import { createdMonth, statusFor, thisMonth } from '@/features/commitments/month'
+import { SavingsSummary } from '@/features/savings/savings-summary'
 
 export function Dashboard() {
   const { commitments, payments, month } = useCommitments()
@@ -68,6 +69,8 @@ export function Dashboard() {
           )}
         </>
       )}
+
+      {!loading && <SavingsSummary />}
     </div>
   )
 }

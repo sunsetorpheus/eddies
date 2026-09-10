@@ -6,6 +6,8 @@ import { Dashboard } from './features/dashboard/dashboard'
 import { CommitmentsProvider } from './features/commitments/commitments-store'
 import { Commitments } from './features/commitments/commitments'
 import { CommitmentForm } from './features/commitments/commitment-form'
+import { Savings } from './features/savings/savings'
+import { GoalForm } from './features/savings/goal-form'
 import { Profile } from './features/profile/profile'
 
 export default function App() {
@@ -35,6 +37,9 @@ export default function App() {
               <Route path="/commitments" element={<Commitments />} />
               <Route path="/commitments/new" element={<CommitmentForm />} />
               <Route path="/commitments/:id" element={<CommitmentForm />} />
+              <Route path="/savings" element={<Savings />} />
+              <Route path="/savings/new" element={<GoalForm />} />
+              <Route path="/savings/:id" element={<GoalForm />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

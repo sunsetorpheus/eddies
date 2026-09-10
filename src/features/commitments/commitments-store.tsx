@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase'
 import { withTransition } from '@/lib/utils'
 import { thisMonth, type MonthKey } from './month'
 import type { Commitment, CommitmentDraft, Payment } from './types'
+import type { Contribution, GoalDraft, SavingsGoal } from '@/features/savings/types'
 
 export type Profile = { username: string; monthly_income: number | null }
 
@@ -28,28 +29,45 @@ type Store = {
   unmarkPaid: (commitmentId: string, month: string) => Promise<void>
   setIncome: (income: number | null) => Promise<void>
   setUsername: (username: string) => Promise<void>
+
+  goals: SavingsGoal[] | undefined
+  contributions: Contribution[] | undefined
+  createGoal: (draft: GoalDraft) => Promise<void>
+  updateGoal: (id: string, draft: Partial<GoalDraft>) => Promise<void>
+  removeGoal: (id: string) => Promise<void>
+  setGoalAchieved: (id: string, achieved: boolean) => Promise<void>
+  /** Set (or clear, with amount 0/null) this goal's contribution for a month. */
+  setContribution: (goalId: string, month: string, amount: number | null) => Promise<void>
 }
 
 const Ctx = createContext<Store | null>(null)
 
-/** Wrap the authed app once so every screen shares one fetch of commitments, payments, and profile. */
+/** Wrap the authed app once so every screen shares one fetch of the user's data. */
 export function CommitmentsProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const [commitments, setCommitments] = useState<Commitment[] | undefined>(undefined)
   const [payments, setPayments] = useState<Payment[] | undefined>(undefined)
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
+  const [goals, setGoals] = useState<SavingsGoal[] | undefined>(undefined)
+  const [contributions, setContributions] = useState<Contribution[] | undefined>(undefined)
   const [month, setMonth] = useState<MonthKey>(thisMonth())
 
   const reload = useCallback(async () => {
-    const [c, p, pr] = await Promise.all([
+    const [c, p, pr, g, ct] = await Promise.all([
       supabase.from('commitments').select('*').order('created_at', { ascending: false }),
       supabase.from('payments').select('*'),
       supabase.from('profiles').select('username, monthly_income').eq('id', userId).maybeSingle(),
+      supabase.from('savings_goals').select('*').order('created_at', { ascending: false }),
+      supabase.from('contributions').select('*'),
     ])
     if (c.error) throw c.error
     if (p.error) throw p.error
+    if (g.error) throw g.error
+    if (ct.error) throw ct.error
     setCommitments(c.data)
     setPayments(p.data)
     setProfile(pr.data ?? null)
+    setGoals(g.data)
+    setContributions(ct.data)
   }, [userId])
 
   useEffect(() => {
@@ -60,6 +78,8 @@ export function CommitmentsProvider({ userId, children }: { userId: string; chil
     commitments,
     payments,
     profile,
+    goals,
+    contributions,
     month,
     setMonth,
     reload,
@@ -130,6 +150,45 @@ export function CommitmentsProvider({ userId, children }: { userId: string; chil
     async setUsername(username) {
       const { error } = await supabase.from('profiles').update({ username }).eq('id', userId)
       if (error) throw error
+      await reload()
+    },
+    async createGoal(draft) {
+      const { error } = await supabase.from('savings_goals').insert(draft)
+      if (error) throw error
+      await reload()
+    },
+    async updateGoal(id, draft) {
+      const { error } = await supabase.from('savings_goals').update(draft).eq('id', id)
+      if (error) throw error
+      await reload()
+    },
+    async removeGoal(id) {
+      const { error } = await supabase.from('savings_goals').delete().eq('id', id)
+      if (error) throw error
+      await reload()
+    },
+    async setGoalAchieved(id, achieved) {
+      const { error } = await supabase
+        .from('savings_goals')
+        .update({ achieved_at: achieved ? new Date().toISOString() : null })
+        .eq('id', id)
+      if (error) throw error
+      await reload()
+    },
+    async setContribution(goalId, m, amount) {
+      if (amount == null || amount <= 0) {
+        const { error } = await supabase
+          .from('contributions')
+          .delete()
+          .eq('goal_id', goalId)
+          .eq('month', m)
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('contributions')
+          .upsert({ goal_id: goalId, month: m, amount }, { onConflict: 'goal_id,month' })
+        if (error) throw error
+      }
       await reload()
     },
   }
