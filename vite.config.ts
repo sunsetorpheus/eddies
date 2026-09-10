@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Eddies',
         short_name: 'Eddies',
         description: 'Personal finance',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#1a1a1f',
+        background_color: '#1a1a1f',
         display: 'standalone',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },

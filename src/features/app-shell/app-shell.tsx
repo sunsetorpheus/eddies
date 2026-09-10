@@ -15,9 +15,13 @@ function NavItems({ variant }: { variant: 'sidebar' | 'bar' }) {
       className={({ isActive }) =>
         cn(
           sidebar
-            ? 'flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted aria-[current=page]:bg-muted'
-            : 'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-xs',
-          isActive ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
+            ? 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors'
+            : 'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors',
+          isActive
+            ? sidebar
+              ? 'bg-accent text-accent-foreground'
+              : 'text-foreground'
+            : 'text-muted-foreground hover:text-foreground',
         )
       }
     >
@@ -41,20 +45,22 @@ export function AppShell({ userId, email }: { userId: string; email: string }) {
       </a>
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-52 shrink-0 flex-col border-r md:flex">
-        <span className="font-heading px-4 py-4 text-lg font-medium">Eddies</span>
-        <nav aria-label="Main" className="flex flex-1 flex-col gap-1 px-2">
+      <aside className="hidden w-60 shrink-0 flex-col border-r md:flex">
+        <div className="flex h-14 items-center border-b px-4">
+          <span className="font-heading text-base font-semibold tracking-tight">Eddies</span>
+        </div>
+        <nav aria-label="Main" className="flex flex-1 flex-col gap-1 p-2">
           <NavItems variant="sidebar" />
         </nav>
-        <div className="flex flex-col gap-2 border-t p-4">
-          <span className="truncate text-sm text-muted-foreground">{who}</span>
+        <div className="flex flex-col gap-2 border-t p-3">
+          <span className="truncate px-1 text-sm text-muted-foreground">{who}</span>
           <SignOutButton />
         </div>
       </aside>
 
       {/* Phone top bar */}
-      <header className="flex items-center justify-between border-b px-4 py-3 md:hidden">
-        <span className="font-heading font-medium">Eddies</span>
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+        <span className="font-heading text-base font-semibold tracking-tight">Eddies</span>
         <div className="flex min-w-0 items-center gap-3">
           <span className="truncate text-sm text-muted-foreground">{who}</span>
           <SignOutButton />
@@ -63,7 +69,7 @@ export function AppShell({ userId, email }: { userId: string; email: string }) {
 
       {/* Page content */}
       <main id="main" className="flex-1 pb-20 md:pb-0">
-        <div className="mx-auto max-w-2xl p-4 md:py-8">
+        <div className="mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-10">
           <Outlet />
         </div>
       </main>
@@ -71,7 +77,7 @@ export function AppShell({ userId, email }: { userId: string; email: string }) {
       {/* Phone bottom bar */}
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-20 flex border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 flex border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden"
       >
         <NavItems variant="bar" />
       </nav>
