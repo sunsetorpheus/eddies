@@ -1,6 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { useProfile } from '@/features/auth/use-profile'
+import { useCommitments } from '@/features/commitments/commitments-store'
 import { SignOutButton } from '@/features/auth/sign-out-button'
 import { NAV_ITEMS } from './nav'
 
@@ -31,9 +31,12 @@ function NavItems({ variant }: { variant: 'sidebar' | 'bar' }) {
   ))
 }
 
-export function AppShell({ userId, email }: { userId: string; email: string }) {
-  const username = useProfile(userId)
-  const who = username ?? email
+export function AppShell({ email }: { email: string }) {
+  const { profile } = useCommitments()
+  const who = profile?.username ?? email
+  const { pathname } = useLocation()
+  // top-level section, so the fade re-triggers on tab change but not on ?query edits
+  const section = '/' + (pathname.split('/')[1] ?? '')
 
   return (
     <div className="flex min-h-svh flex-col md:flex-row">
@@ -47,7 +50,7 @@ export function AppShell({ userId, email }: { userId: string; email: string }) {
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r md:flex">
         <div className="flex h-14 items-center border-b px-4">
-          <span className="font-heading text-base font-semibold tracking-tight">Eddies</span>
+          <span className="text-base font-semibold tracking-tight">Eddies</span>
         </div>
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1 p-2">
           <NavItems variant="sidebar" />
@@ -60,7 +63,7 @@ export function AppShell({ userId, email }: { userId: string; email: string }) {
 
       {/* Phone top bar */}
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
-        <span className="font-heading text-base font-semibold tracking-tight">Eddies</span>
+        <span className="text-base font-semibold tracking-tight">Eddies</span>
         <div className="flex min-w-0 items-center gap-3">
           <span className="truncate text-sm text-muted-foreground">{who}</span>
           <SignOutButton />
@@ -69,7 +72,7 @@ export function AppShell({ userId, email }: { userId: string; email: string }) {
 
       {/* Page content */}
       <main id="main" className="flex-1 pb-20 md:pb-0">
-        <div className="mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-10">
+        <div key={section} className="animate-in-up mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-10">
           <Outlet />
         </div>
       </main>

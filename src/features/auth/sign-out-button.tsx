@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
@@ -17,8 +18,15 @@ export function SignOutButton({ className }: { className?: string }) {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={signOut} disabled={busy} className={className}>
-      Sign out
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onClick={signOut}
+      disabled={busy}
+      aria-label="Sign out"
+      className={className}
+    >
+      <LogOut />
     </Button>
   )
 }

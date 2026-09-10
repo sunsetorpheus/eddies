@@ -3,8 +3,10 @@ import { useSession } from './features/auth/use-session'
 import { AuthForm } from './features/auth/auth-form'
 import { AppShell } from './features/app-shell/app-shell'
 import { Dashboard } from './features/dashboard/dashboard'
+import { CommitmentsProvider } from './features/commitments/commitments-store'
 import { Commitments } from './features/commitments/commitments'
-import { Settings } from './features/settings/settings'
+import { CommitmentForm } from './features/commitments/commitment-form'
+import { Profile } from './features/profile/profile'
 
 export default function App() {
   const session = useSession()
@@ -23,11 +25,17 @@ export default function App() {
         {session ? (
           <>
             <Route
-              element={<AppShell userId={session.user.id} email={session.user.email ?? ''} />}
+              element={
+                <CommitmentsProvider userId={session.user.id}>
+                  <AppShell email={session.user.email ?? ''} />
+                </CommitmentsProvider>
+              }
             >
               <Route path="/" element={<Dashboard />} />
               <Route path="/commitments" element={<Commitments />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/commitments/new" element={<CommitmentForm />} />
+              <Route path="/commitments/:id" element={<CommitmentForm />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
