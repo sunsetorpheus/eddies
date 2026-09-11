@@ -45,6 +45,9 @@ function Form({ editing }: { editing?: SavingsGoal }) {
   const [name, setName] = useState(editing?.name ?? '')
   const [target, setTarget] = useState(editing ? String(editing.target) : '')
   const [targetDate, setTargetDate] = useState(editing?.target_date ?? '')
+  const [plannedMonthly, setPlannedMonthly] = useState(
+    editing?.planned_monthly != null ? String(editing.planned_monthly) : '',
+  )
   const [busy, setBusy] = useState(false)
 
   const progress = editing ? goalProgress(editing, contributions ?? []) : null
@@ -62,9 +65,19 @@ function Form({ editing }: { editing?: SavingsGoal }) {
       toast.error('Enter a target greater than zero.')
       return
     }
+    const planned = plannedMonthly.trim() === '' ? null : Number(plannedMonthly)
+    if (planned != null && (!Number.isFinite(planned) || planned <= 0)) {
+      toast.error('Enter a valid monthly amount, or leave it blank.')
+      return
+    }
     setBusy(true)
     try {
-      const draft = { name: trimmed, target: value, target_date: targetDate || null }
+      const draft = {
+        name: trimmed,
+        target: value,
+        target_date: targetDate || null,
+        planned_monthly: planned,
+      }
       if (editing) await updateGoal(editing.id, draft)
       else await createGoal(draft)
       navigate('/savings')
@@ -153,6 +166,23 @@ function Form({ editing }: { editing?: SavingsGoal }) {
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
           />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="planned-monthly">Planned monthly contribution (optional)</Label>
+          <Input
+            id="planned-monthly"
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            step="0.01"
+            placeholder="500.00"
+            value={plannedMonthly}
+            onChange={(e) => setPlannedMonthly(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Used to estimate when you'll finish, and whether you're on track for the target date.
+          </p>
         </div>
 
         <div className="flex items-center gap-2 pt-2">

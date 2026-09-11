@@ -7,7 +7,7 @@ export type GoalProgress = {
   remaining: number
   pct: number // 0–100, clamped
   done: boolean // marked achieved, or saved >= target
-  /** Month the goal is projected to finish, from the average monthly contribution. Null if unknowable. */
+  /** Month the goal is projected to finish, from planned_monthly. Null if not set, or done. */
   projectedFinish: MonthKey | null
   /** "September 2026", or null. */
   projectedFinishLabel: string | null
@@ -25,12 +25,9 @@ export function goalProgress(goal: SavingsGoal, contributions: Contribution[]): 
   const done = goal.achieved_at != null || saved >= goal.target
 
   let projectedFinish: MonthKey | null = null
-  if (!done && mine.length > 0) {
-    const avg = saved / mine.length
-    if (avg > 0) {
-      const monthsLeft = Math.ceil(remaining / avg)
-      projectedFinish = addMonths(thisMonth(), monthsLeft)
-    }
+  if (!done && goal.planned_monthly) {
+    const monthsLeft = Math.ceil(remaining / goal.planned_monthly)
+    projectedFinish = addMonths(thisMonth(), monthsLeft)
   }
 
   return {

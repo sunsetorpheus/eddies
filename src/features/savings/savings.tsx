@@ -53,7 +53,7 @@ export function Savings() {
           </ul>
 
           <p className="text-xs text-muted-foreground">
-            Log what you set aside each month. {monthLabel(month)} shown.
+            Deposit or withdraw as you go. {monthLabel(month)} shown.
           </p>
         </>
       )}
@@ -65,22 +65,23 @@ function GoalCard({ goal, month }: { goal: SavingsGoal; month: string }) {
   const { contributions, setContribution } = useCommitments()
   const p = goalProgress(goal, contributions ?? [])
   const thisMonthAmount =
-    (contributions ?? []).find((c) => c.goal_id === goal.id && c.month === month)?.amount ?? null
+    (contributions ?? []).find((c) => c.goal_id === goal.id && c.month === month)?.amount ?? 0
 
-  const [value, setValue] = useState(thisMonthAmount != null ? String(thisMonthAmount) : '')
+  const [value, setValue] = useState('')
   const [busy, setBusy] = useState(false)
-  const changed = (value.trim() === '' ? null : Number(value)) !== thisMonthAmount
 
-  async function save() {
-    const num = value.trim() === '' ? null : Number(value)
-    if (num != null && (!Number.isFinite(num) || num < 0)) {
-      toast.error('Enter a valid amount.')
+  async function apply(sign: 1 | -1) {
+    const delta = Number(value)
+    if (!Number.isFinite(delta) || delta <= 0) {
+      toast.error('Enter an amount greater than zero.')
       return
     }
+    const next = Math.max(0, thisMonthAmount + sign * delta)
     setBusy(true)
     try {
-      await setContribution(goal.id, month, num)
-      toast.success(num ? 'Contribution saved.' : 'Contribution cleared.')
+      await setContribution(goal.id, month, next || null)
+      setValue('')
+      toast.success(sign === 1 ? 'Deposit added.' : 'Withdrawal recorded.')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not save.')
     } finally {
@@ -108,19 +109,25 @@ function GoalCard({ goal, month }: { goal: SavingsGoal; month: string }) {
 
       {!p.done && (
         <>
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {formatMoney(thisMonthAmount)} added in {monthLabel(month).split(' ')[0]}
+          </p>
           <div className="flex items-center gap-2">
             <Input
               type="number"
               inputMode="decimal"
-              min="0"
+              min="0.01"
               step="0.01"
-              placeholder={`Added in ${monthLabel(month).split(' ')[0]}`}
+              placeholder="Amount"
               value={value}
               onChange={(e) => setValue(e.target.value)}
               className="h-8"
             />
-            <Button size="sm" onClick={save} disabled={busy || !changed}>
-              {busy ? 'Saving…' : 'Save'}
+            <Button variant="outline" onClick={() => apply(-1)} disabled={busy}>
+              Withdraw
+            </Button>
+            <Button onClick={() => apply(1)} disabled={busy}>
+              Deposit
             </Button>
           </div>
           <p className="text-xs text-muted-foreground tabular-nums">
