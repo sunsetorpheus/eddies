@@ -19,6 +19,7 @@ import {
 import { useCommitments } from '@/features/commitments/commitments-store'
 import { monthLabel } from '@/features/commitments/month'
 import { contributionHistory, goalProgress } from './goal'
+import { SavingsTrend } from './savings-trend'
 import type { SavingsGoal } from './types'
 
 export function GoalForm() {
@@ -123,11 +124,14 @@ function Form({ editing }: { editing?: SavingsGoal }) {
       </div>
 
       {editing && history && history.months > 0 && (
-        <p className="text-sm text-muted-foreground tabular-nums">
-          {formatMoney(progress!.saved)} saved over {history.months}{' '}
-          {history.months === 1 ? 'month' : 'months'}
-          {history.lastMonth && ` · last added ${monthLabel(history.lastMonth)}`}
-        </p>
+        <div className="space-y-3 rounded-xl border bg-card p-4">
+          <p className="text-sm text-muted-foreground tabular-nums">
+            {formatMoney(progress!.saved)} saved over {history.months}{' '}
+            {history.months === 1 ? 'month' : 'months'}
+            {history.lastMonth && ` · last added ${monthLabel(history.lastMonth)}`}
+          </p>
+          <SavingsTrend contributions={contributions ?? []} goalId={editing.id} />
+        </div>
       )}
 
       <form onSubmit={onSubmit} className="grid gap-4">
@@ -181,7 +185,7 @@ function Form({ editing }: { editing?: SavingsGoal }) {
             onChange={(e) => setPlannedMonthly(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Used to estimate when you'll finish, and whether you're on track for the target date.
+            Used to estimate when you'll finish.
           </p>
         </div>
 

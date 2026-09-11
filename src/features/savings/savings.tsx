@@ -7,15 +7,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Bar } from '@/components/ui/bar'
 import { useCommitments } from '@/features/commitments/commitments-store'
-import { monthLabel } from '@/features/commitments/month'
-import { goalProgress, totalSaved } from './goal'
+import { monthLabel, thisMonth } from '@/features/commitments/month'
+import { goalProgress, monthTotal, totalSaved } from './goal'
+import { SavingsTrend } from './savings-trend'
 import type { SavingsGoal } from './types'
 
 export function Savings() {
-  const { goals, contributions, month } = useCommitments()
+  const { goals, contributions, profile, month } = useCommitments()
 
   const loading = goals === undefined || contributions === undefined
   const all = goals ?? []
+
+  const thisMonthSaved = monthTotal(contributions ?? [], thisMonth())
+  const income = profile?.monthly_income ?? null
+  const savingsRate = income && income > 0 ? Math.round((thisMonthSaved / income) * 100) : null
 
   // open goals first, achieved ones after
   const sorted = [...all].sort((a, b) => {
@@ -41,10 +46,31 @@ export function Savings() {
         <EmptyState />
       ) : (
         <>
-          <p className="text-sm text-muted-foreground tabular-nums">
-            {formatMoney(totalSaved(contributions ?? []))} saved across {all.length}{' '}
-            {all.length === 1 ? 'goal' : 'goals'}
-          </p>
+          <div className="space-y-4 rounded-xl border bg-card p-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Saved this month
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight">
+                {formatMoney(thisMonthSaved)}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground tabular-nums">
+              <span>
+                {formatMoney(totalSaved(contributions ?? []))} saved across {all.length}{' '}
+                {all.length === 1 ? 'goal' : 'goals'}
+              </span>
+              {savingsRate != null && (
+                <>
+                  <span aria-hidden>·</span>
+                  <span>{savingsRate}% of income</span>
+                </>
+              )}
+            </div>
+
+            <SavingsTrend contributions={contributions ?? []} />
+          </div>
 
           <ul className="space-y-3">
             {sorted.map((g) => (
@@ -121,12 +147,17 @@ function GoalCard({ goal, month }: { goal: SavingsGoal; month: string }) {
               placeholder="Amount"
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="h-8"
+              className="min-w-0"
             />
-            <Button variant="outline" onClick={() => apply(-1)} disabled={busy}>
+            <Button
+              variant="outline"
+              onClick={() => apply(-1)}
+              disabled={busy}
+              className="shrink-0"
+            >
               Withdraw
             </Button>
-            <Button onClick={() => apply(1)} disabled={busy}>
+            <Button onClick={() => apply(1)} disabled={busy} className="shrink-0">
               Deposit
             </Button>
           </div>

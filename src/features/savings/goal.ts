@@ -45,6 +45,11 @@ export function totalSaved(contributions: Contribution[]): number {
   return contributions.reduce((s, c) => s + c.amount, 0)
 }
 
+/** Total contributed across every goal in a given month. */
+export function monthTotal(contributions: Contribution[], month: MonthKey): number {
+  return contributions.filter((c) => c.month === month).reduce((s, c) => s + c.amount, 0)
+}
+
 /** Contribution history for one goal, mirroring commitments' paymentHistory. */
 export function contributionHistory(
   goal: SavingsGoal,
