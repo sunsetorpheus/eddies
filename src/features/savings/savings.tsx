@@ -88,7 +88,7 @@ export function Savings() {
 }
 
 function GoalCard({ goal, month }: { goal: SavingsGoal; month: string }) {
-  const { contributions, setContribution } = useCommitments()
+  const { contributions, setContribution, withdraw } = useCommitments()
   const p = goalProgress(goal, contributions ?? [])
   const thisMonthAmount =
     (contributions ?? []).find((c) => c.goal_id === goal.id && c.month === month)?.amount ?? 0
@@ -102,15 +102,14 @@ function GoalCard({ goal, month }: { goal: SavingsGoal; month: string }) {
       toast.error('Enter an amount greater than zero.')
       return
     }
-    if (sign === -1 && delta > p.saved) {
-      toast.error(`Only ${formatMoney(p.saved)} saved.`)
-      return
-    }
-    // withdrawals come off the total saved, not just this month's own deposits
-    const next = sign === 1 ? thisMonthAmount + delta : thisMonthAmount - delta
     setBusy(true)
     try {
-      await setContribution(goal.id, month, next || null)
+      if (sign === 1) {
+        await setContribution(goal.id, month, thisMonthAmount + delta)
+      } else {
+        // comes off the total saved, oldest contributions last — never just this month's
+        await withdraw(goal.id, delta)
+      }
       setValue('')
       toast.success(sign === 1 ? 'Deposit added.' : 'Withdrawal recorded.')
     } catch (err) {

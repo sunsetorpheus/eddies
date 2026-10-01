@@ -38,6 +38,8 @@ type Store = {
   setGoalAchieved: (id: string, achieved: boolean) => Promise<void>
   /** Set (or clear, with amount 0/null) this goal's contribution for a month. */
   setContribution: (goalId: string, month: string, amount: number | null) => Promise<void>
+  /** Take `amount` out of a goal, most recent contribution first. Throws if it exceeds the total saved. */
+  withdraw: (goalId: string, amount: number) => Promise<void>
 }
 
 const Ctx = createContext<Store | null>(null)
@@ -176,7 +178,7 @@ export function CommitmentsProvider({ userId, children }: { userId: string; chil
       await reload()
     },
     async setContribution(goalId, m, amount) {
-      if (amount == null || amount === 0) {
+      if (amount == null || amount <= 0) {
         const { error } = await supabase
           .from('contributions')
           .delete()
@@ -187,6 +189,39 @@ export function CommitmentsProvider({ userId, children }: { userId: string; chil
         const { error } = await supabase
           .from('contributions')
           .upsert({ goal_id: goalId, month: m, amount }, { onConflict: 'goal_id,month' })
+        if (error) throw error
+      }
+      await reload()
+    },
+    async withdraw(goalId, amount) {
+      const mine = (contributions ?? [])
+        .filter((c) => c.goal_id === goalId)
+        .sort((a, b) => (a.month < b.month ? 1 : -1)) // most recent month first
+
+      let remaining = amount
+      const toDelete: string[] = []
+      const toUpdate: { id: string; amount: number }[] = []
+      for (const c of mine) {
+        if (remaining <= 0) break
+        if (c.amount <= remaining) {
+          remaining -= c.amount
+          toDelete.push(c.id)
+        } else {
+          toUpdate.push({ id: c.id, amount: c.amount - remaining })
+          remaining = 0
+        }
+      }
+      if (remaining > 0) throw new Error(`Only ${mine.reduce((s, c) => s + c.amount, 0)} saved.`)
+
+      if (toDelete.length) {
+        const { error } = await supabase.from('contributions').delete().in('id', toDelete)
+        if (error) throw error
+      }
+      for (const u of toUpdate) {
+        const { error } = await supabase
+          .from('contributions')
+          .update({ amount: u.amount })
+          .eq('id', u.id)
         if (error) throw error
       }
       await reload()
