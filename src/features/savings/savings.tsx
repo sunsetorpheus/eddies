@@ -102,7 +102,12 @@ function GoalCard({ goal, month }: { goal: SavingsGoal; month: string }) {
       toast.error('Enter an amount greater than zero.')
       return
     }
-    const next = Math.max(0, thisMonthAmount + sign * delta)
+    if (sign === -1 && delta > p.saved) {
+      toast.error(`Only ${formatMoney(p.saved)} saved.`)
+      return
+    }
+    // withdrawals come off the total saved, not just this month's own deposits
+    const next = sign === 1 ? thisMonthAmount + delta : thisMonthAmount - delta
     setBusy(true)
     try {
       await setContribution(goal.id, month, next || null)

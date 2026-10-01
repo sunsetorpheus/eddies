@@ -176,7 +176,7 @@ export function CommitmentsProvider({ userId, children }: { userId: string; chil
       await reload()
     },
     async setContribution(goalId, m, amount) {
-      if (amount == null || amount <= 0) {
+      if (amount == null || amount === 0) {
         const { error } = await supabase
           .from('contributions')
           .delete()
